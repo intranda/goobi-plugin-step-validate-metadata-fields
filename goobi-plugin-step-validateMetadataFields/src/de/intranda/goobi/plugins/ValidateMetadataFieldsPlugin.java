@@ -26,9 +26,11 @@ import org.goobi.production.plugin.interfaces.IStepPluginVersion2;
 
 import de.sub.goobi.config.ConfigPlugins;
 import de.sub.goobi.helper.Helper;
+import de.sub.goobi.helper.enums.StepStatus;
 import de.sub.goobi.helper.exceptions.DAOException;
 import de.sub.goobi.helper.exceptions.SwapException;
 import de.sub.goobi.persistence.managers.ProcessManager;
+import de.sub.goobi.persistence.managers.StepManager;
 import lombok.Data;
 import lombok.extern.log4j.Log4j;
 import net.xeoh.plugins.base.annotations.PluginImplementation;
@@ -181,6 +183,12 @@ public class ValidateMetadataFieldsPlugin implements IStepPluginVersion2 {
             }
             processlog += "</ul>";
 			Helper.addMessageToProcessLog(process.getId(),LogType.ERROR,processlog);
+			step.setBearbeitungsstatusEnum(StepStatus.ERROR);
+			try {
+				StepManager.saveStep(step);
+			} catch (DAOException e) {
+		          log.error("Error while saving the step status.", e);
+		    }
 			return PluginReturnValue.ERROR;
 		} else {
 			Helper.addMessageToProcessLog(process.getId(),LogType.INFO,"The validation of all metadata fields was successfull without any issues.");
