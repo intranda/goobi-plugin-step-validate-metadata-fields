@@ -38,6 +38,7 @@ import ugh.dl.DigitalDocument;
 import ugh.dl.DocStruct;
 import ugh.dl.Fileformat;
 import ugh.dl.Metadata;
+import ugh.dl.Prefs;
 import ugh.exceptions.PreferencesException;
 import ugh.exceptions.ReadException;
 import ugh.exceptions.WriteException;
@@ -102,12 +103,14 @@ public class ValidateMetadataFieldsPlugin implements IStepPluginVersion2 {
         
 		try {
 			// open the mets file
+			Thread.sleep(5000);
 			Fileformat ff = step.getProzess().readMetadataFile();
 			DigitalDocument dd = ff.getDigitalDocument();
 		    DocStruct doc = dd.getLogicalDocStruct();
 		    // run through all metadata fields
 		    for (Metadata m : doc.getAllMetadata()) {
-				String title = m.getType().getName();
+		    	String title = m.getType().getName();
+		    	String label_en = m.getType().getLanguage("en");
 				String value = m.getValue();
 				for (MetadataMappingObject mmo : metadataList) {
 					if (mmo.getRulesetName().equals(title)) {
@@ -116,7 +119,7 @@ public class ValidateMetadataFieldsPlugin implements IStepPluginVersion2 {
 						if (mmo.isRequired()) {
 				            if (value == null || value.isEmpty()) {
 				            	valid = false;
-				                issues.add(title + ": " + mmo.getRequiredErrorMessage());
+				                issues.add(label_en + ": " + mmo.getRequiredErrorMessage());
 				            }
 				        }
 				        // check if value matches the configured pattern
@@ -125,7 +128,7 @@ public class ValidateMetadataFieldsPlugin implements IStepPluginVersion2 {
 				            Matcher matcher = pattern.matcher(value);
 				            if (!matcher.find()) {
 				            	valid = false;
-				                issues.add(title + ": " + mmo.getPatternErrorMessage());
+				                issues.add(label_en + ": " + mmo.getPatternErrorMessage());
 				            }
 				        }
 				        // checks whether all parts of value are in the list of controlled contents
@@ -134,7 +137,7 @@ public class ValidateMetadataFieldsPlugin implements IStepPluginVersion2 {
 				            for (String v : valueList) {
 				                if (!mmo.getValidContent().contains(v)) {
 				                	valid = false;
-					                issues.add(title + ": " + mmo.getValidContentErrorMessage());        
+					                issues.add(label_en + ": " + mmo.getValidContentErrorMessage());        
 				                }
 				            }
 				        }
@@ -162,7 +165,7 @@ public class ValidateMetadataFieldsPlugin implements IStepPluginVersion2 {
 				            String[] wordArray = value.split(" ");
 				            if (wordArray.length < mmo.getWordcount()) {
 				            	valid = false;
-				                issues.add(title + ": " + mmo.getWordcountErrormessage());
+				                issues.add(label_en + ": " + mmo.getWordcountErrormessage());
 				            }
 				        }
 					}
@@ -179,10 +182,11 @@ public class ValidateMetadataFieldsPlugin implements IStepPluginVersion2 {
 			String processlog = "Validation issues during in depth data analysis: " + "<br/>";
         	processlog += "<ul>";
             for (String s : issues) {
-                processlog += "<li>" + s + "</li>";
+            	Helper.setFehlerMeldung(s);
+    			processlog += "<li>" + s + "</li>";
             }
             processlog += "</ul>";
-			Helper.addMessageToProcessLog(process.getId(),LogType.ERROR,processlog);
+            Helper.addMessageToProcessLog(process.getId(),LogType.ERROR,processlog);
 			step.setBearbeitungsstatusEnum(StepStatus.ERROR);
 			try {
 				StepManager.saveStep(step);
