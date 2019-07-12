@@ -103,7 +103,7 @@ public class ValidateMetadataFieldsPlugin implements IStepPluginVersion2 {
         
 		try {
 			// open the mets file
-			Thread.sleep(5000);
+			Thread.sleep(10000);
 			Fileformat ff = step.getProzess().readMetadataFile();
 			DigitalDocument dd = ff.getDigitalDocument();
 		    DocStruct doc = dd.getLogicalDocStruct();
