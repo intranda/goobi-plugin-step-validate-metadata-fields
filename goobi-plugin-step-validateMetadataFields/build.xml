@@ -1,9 +1,7 @@
-<?xml version="1.0"?>
-
-<project name="goobi-plugin-step-validateMetadataFields">
+<project name="goobi-plugin-step-validateMetadataFields" default="devbuild">
 	<target name="devbuild">
 		<exec executable="mvn">
-			<arg value="install" />
+			<arg value="install"/>
 		</exec>
 		<copy file="target/plugin_intranda_step_validateMetadataFields.jar" todir="/opt/digiverso/goobi/plugins/step/"/>
 	</target>
