@@ -29,7 +29,6 @@ import de.sub.goobi.helper.Helper;
 import de.sub.goobi.helper.enums.StepStatus;
 import de.sub.goobi.helper.exceptions.DAOException;
 import de.sub.goobi.helper.exceptions.SwapException;
-import de.sub.goobi.persistence.managers.ProcessManager;
 import de.sub.goobi.persistence.managers.StepManager;
 import lombok.Data;
 import lombok.extern.log4j.Log4j;
@@ -38,10 +37,8 @@ import ugh.dl.DigitalDocument;
 import ugh.dl.DocStruct;
 import ugh.dl.Fileformat;
 import ugh.dl.Metadata;
-import ugh.dl.Prefs;
 import ugh.exceptions.PreferencesException;
 import ugh.exceptions.ReadException;
-import ugh.exceptions.WriteException;
 
 @PluginImplementation
 @Data
@@ -57,7 +54,7 @@ public class ValidateMetadataFieldsPlugin implements IStepPluginVersion2 {
 
     private String title = "intranda_step_validateMetadataFields";
     private List<MetadataMappingObject> metadataList = new ArrayList<>();
-    
+
     @SuppressWarnings("unchecked")
     @Override
     public void initialize(Step step, String returnPath) {
@@ -89,117 +86,117 @@ public class ValidateMetadataFieldsPlugin implements IStepPluginVersion2 {
                 }
             }
         }
-        
+
         List<HierarchicalConfiguration> mml = config.configurationsAt("//metadata");
         for (HierarchicalConfiguration md : mml) {
             metadataList.add(getMetadata(md));
         }
     }
-    
+
     @Override
     public PluginReturnValue run() {
         boolean valid = true;
         List<String> issues = new ArrayList<>();
-        
-		try {
-			// open the mets file
-			Thread.sleep(10000);
-			Fileformat ff = step.getProzess().readMetadataFile();
-			DigitalDocument dd = ff.getDigitalDocument();
-		    DocStruct doc = dd.getLogicalDocStruct();
-		    // run through all metadata fields
-		    for (Metadata m : doc.getAllMetadata()) {
-		    	String title = m.getType().getName();
-		    	String label_en = m.getType().getLanguage("en");
-				String value = m.getValue();
-				for (MetadataMappingObject mmo : metadataList) {
-					if (mmo.getRulesetName().equals(title)) {
-					
-						// check if value is empty but required
-						if (mmo.isRequired()) {
-				            if (value == null || value.isEmpty()) {
-				            	valid = false;
-				                issues.add(label_en + ": " + mmo.getRequiredErrorMessage());
-				            }
-				        }
-				        // check if value matches the configured pattern
-				        if (mmo.getPattern() != null && value != null && !value.isEmpty()) {
-				            Pattern pattern = mmo.getPattern();
-				            Matcher matcher = pattern.matcher(value);
-				            if (!matcher.find()) {
-				            	valid = false;
-				                issues.add(label_en + ": " + mmo.getPatternErrorMessage());
-				            }
-				        }
-				        // checks whether all parts of value are in the list of controlled contents
-				        if (!(mmo.getValidContent().isEmpty() || value == null || value.isEmpty())) {
-				            String[] valueList = value.split("; ");
-				            for (String v : valueList) {
-				                if (!mmo.getValidContent().contains(v)) {
-				                	valid = false;
-					                issues.add(label_en + ": " + mmo.getValidContentErrorMessage());        
-				                }
-				            }
-				        }
-				        // check if a configured requirement of either field having content is
-				        // fulfilled
-	//			        if (!mmo.getEitherHeader().isEmpty()) {
-	//			            if (rowMap.get(headerOrder.get(mmo.getEitherHeader())).isEmpty() && value.isEmpty()) {
-	//			                datum.setValid(false);
-	//			                datum.getErrorMessages().add(mmo.getEitherErrorMessage());
-	//			            }
-	//			        }
-				        // check if field has content despite required field not having content
-	//			        if (!mmo.getRequiredHeaders()[0].isEmpty()) {
-	//			            for (String requiredHeader : mmo.getRequiredHeaders()) {
-	//			                if (rowMap.get(headerOrder.get(requiredHeader)).isEmpty() && !value.isEmpty()) {
-	//			                    datum.setValid(false);
-	//			                    if (!datum.getErrorMessages().contains(mmo.getRequiredHeadersErrormessage())) {
-	//			                        datum.getErrorMessages().add(mmo.getRequiredHeadersErrormessage());
-	//			                    }
-	//			                }
-	//			            }
-	//			        }
-				        //check if field has the demanded wordcount
-				        if (mmo.getWordcount() != 0) {
-				            String[] wordArray = value.split(" ");
-				            if (wordArray.length < mmo.getWordcount()) {
-				            	valid = false;
-				                issues.add(label_en + ": " + mmo.getWordcountErrormessage());
-				            }
-				        }
-					}
-				}
-			}
-		    
-		} catch (ReadException | PreferencesException | WriteException | IOException | InterruptedException | SwapException | DAOException e1) {
-          log.error("Cannot read all metadata from METS file. Validation canceled");
-          return PluginReturnValue.ERROR;
-		}
-    	
-		if (!valid) {
+
+        try {
+            // open the mets file
+            Thread.sleep(10000);
+            Fileformat ff = step.getProzess().readMetadataFile();
+            DigitalDocument dd = ff.getDigitalDocument();
+            DocStruct doc = dd.getLogicalDocStruct();
+            // run through all metadata fields
+            for (Metadata m : doc.getAllMetadata()) {
+                String title = m.getType().getName();
+                String label_en = m.getType().getLanguage("en");
+                String value = m.getValue();
+                for (MetadataMappingObject mmo : metadataList) {
+                    if (mmo.getRulesetName().equals(title)) {
+
+                        // check if value is empty but required
+                        if (mmo.isRequired()) {
+                            if (value == null || value.isEmpty()) {
+                                valid = false;
+                                issues.add(label_en + ": " + mmo.getRequiredErrorMessage());
+                            }
+                        }
+                        // check if value matches the configured pattern
+                        if (mmo.getPattern() != null && value != null && !value.isEmpty()) {
+                            Pattern pattern = mmo.getPattern();
+                            Matcher matcher = pattern.matcher(value);
+                            if (!matcher.find()) {
+                                valid = false;
+                                issues.add(label_en + ": " + mmo.getPatternErrorMessage());
+                            }
+                        }
+                        // checks whether all parts of value are in the list of controlled contents
+                        if (!(mmo.getValidContent().isEmpty() || value == null || value.isEmpty())) {
+                            String[] valueList = value.split("; ");
+                            for (String v : valueList) {
+                                if (!mmo.getValidContent().contains(v)) {
+                                    valid = false;
+                                    issues.add(label_en + ": " + mmo.getValidContentErrorMessage());
+                                }
+                            }
+                        }
+                        // check if a configured requirement of either field having content is
+                        // fulfilled
+                        //			        if (!mmo.getEitherHeader().isEmpty()) {
+                        //			            if (rowMap.get(headerOrder.get(mmo.getEitherHeader())).isEmpty() && value.isEmpty()) {
+                        //			                datum.setValid(false);
+                        //			                datum.getErrorMessages().add(mmo.getEitherErrorMessage());
+                        //			            }
+                        //			        }
+                        // check if field has content despite required field not having content
+                        //			        if (!mmo.getRequiredHeaders()[0].isEmpty()) {
+                        //			            for (String requiredHeader : mmo.getRequiredHeaders()) {
+                        //			                if (rowMap.get(headerOrder.get(requiredHeader)).isEmpty() && !value.isEmpty()) {
+                        //			                    datum.setValid(false);
+                        //			                    if (!datum.getErrorMessages().contains(mmo.getRequiredHeadersErrormessage())) {
+                        //			                        datum.getErrorMessages().add(mmo.getRequiredHeadersErrormessage());
+                        //			                    }
+                        //			                }
+                        //			            }
+                        //			        }
+                        //check if field has the demanded wordcount
+                        if (mmo.getWordcount() != 0) {
+                            String[] wordArray = value.split(" ");
+                            if (wordArray.length < mmo.getWordcount()) {
+                                valid = false;
+                                issues.add(label_en + ": " + mmo.getWordcountErrormessage());
+                            }
+                        }
+                    }
+                }
+            }
+
+        } catch (ReadException | PreferencesException | IOException | InterruptedException | SwapException e1) {
+            log.error("Cannot read all metadata from METS file. Validation canceled");
+            return PluginReturnValue.ERROR;
+        }
+
+        if (!valid) {
             // ProcessManager.saveProcess(p);
-			String processlog = "Validation issues during in depth data analysis: " + "<br/>";
-        	processlog += "<ul>";
+            String processlog = "Validation issues during in depth data analysis: " + "<br/>";
+            processlog += "<ul>";
             for (String s : issues) {
-            	Helper.setFehlerMeldung(s);
-    			processlog += "<li>" + s + "</li>";
+                Helper.setFehlerMeldung(s);
+                processlog += "<li>" + s + "</li>";
             }
             processlog += "</ul>";
-            Helper.addMessageToProcessLog(process.getId(),LogType.ERROR,processlog);
-			step.setBearbeitungsstatusEnum(StepStatus.ERROR);
-			try {
-				StepManager.saveStep(step);
-			} catch (DAOException e) {
-		          log.error("Error while saving the step status.", e);
-		    }
-			return PluginReturnValue.ERROR;
-		} else {
-			Helper.addMessageToProcessLog(process.getId(),LogType.INFO,"The validation of all metadata fields was successfull without any issues.");
-			return PluginReturnValue.FINISH;
-		}
+            Helper.addMessageToProcessLog(process.getId(), LogType.ERROR, processlog);
+            step.setBearbeitungsstatusEnum(StepStatus.ERROR);
+            try {
+                StepManager.saveStep(step);
+            } catch (DAOException e) {
+                log.error("Error while saving the step status.", e);
+            }
+            return PluginReturnValue.ERROR;
+        } else {
+            Helper.addMessageToProcessLog(process.getId(), LogType.INFO, "The validation of all metadata fields was successfull without any issues.");
+            return PluginReturnValue.FINISH;
+        }
     }
-    
+
     /**
      * generate metadata objects out of xml configuration
      * 
@@ -226,7 +223,7 @@ public class ValidateMetadataFieldsPlugin implements IStepPluginVersion2 {
         String eitherErrorMessage = md.getString("@eitherErrorMessage", "");
         String requiredHeadersErrormessage = md.getString("@requiredFieldsErrormessage", "");
         String wordcountErrormessage = md.getString("@wordcountErrorMessage", "");
-        
+
         ArrayList<String> validContent = new ArrayList<>();
 
         if (listPath != null && !listPath.isEmpty()) {
@@ -245,7 +242,7 @@ public class ValidateMetadataFieldsPlugin implements IStepPluginVersion2 {
         if (!patternString.isEmpty()) {
             pattern = Pattern.compile(patternString);
         }
-        
+
         MetadataMappingObject mmo = new MetadataMappingObject();
         mmo.setExcelColumn(columnNumber);
         mmo.setPropertyName(propertyName);
@@ -270,7 +267,7 @@ public class ValidateMetadataFieldsPlugin implements IStepPluginVersion2 {
         }
         return mmo;
     }
-    
+
     /**
      * read separate configuration file for validation
      * 
@@ -285,7 +282,7 @@ public class ValidateMetadataFieldsPlugin implements IStepPluginVersion2 {
         s.close();
         return validContent;
     }
-    
+
     @Override
     public boolean execute() {
         PluginReturnValue val = run();
@@ -314,5 +311,5 @@ public class ValidateMetadataFieldsPlugin implements IStepPluginVersion2 {
     public int getInterfaceVersion() {
         return 1;
     }
-    
+
 }
