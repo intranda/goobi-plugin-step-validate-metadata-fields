@@ -104,23 +104,27 @@ public class ValidateMetadataFieldsPlugin implements IStepPluginVersion2 {
             Fileformat ff = step.getProzess().readMetadataFile();
             DigitalDocument dd = ff.getDigitalDocument();
             DocStruct doc = dd.getLogicalDocStruct();
+
+            // collect all metadata names that exist in the document
+            List<String> existingMetadataNames = new ArrayList<>();
             // run through all metadata fields
             for (Metadata m : doc.getAllMetadata()) {
                 String title = m.getType().getName();
                 String label_en = m.getType().getLanguage("en");
                 String value = m.getValue();
+                existingMetadataNames.add(title);
                 for (MetadataMappingObject mmo : metadataList) {
                     if (mmo.getRulesetName().equals(title)) {
 
                         // check if value is empty but required
                         if (mmo.isRequired()) {
-                            if (value == null || value.isEmpty()) {
+                            if (value == null || value.trim().isEmpty()) {
                                 valid = false;
                                 issues.add(label_en + ": " + mmo.getRequiredErrorMessage());
                             }
                         }
                         // check if value matches the configured pattern
-                        if (mmo.getPattern() != null && value != null && !value.isEmpty()) {
+                        if (mmo.getPattern() != null && value != null && !value.trim().isEmpty()) {
                             Pattern pattern = mmo.getPattern();
                             Matcher matcher = pattern.matcher(value);
                             if (!matcher.find()) {
@@ -129,7 +133,7 @@ public class ValidateMetadataFieldsPlugin implements IStepPluginVersion2 {
                             }
                         }
                         // checks whether all parts of value are in the list of controlled contents
-                        if (!(mmo.getValidContent().isEmpty() || value == null || value.isEmpty())) {
+                        if (!(mmo.getValidContent().isEmpty() || value == null || value.trim().isEmpty())) {
                             String[] valueList = value.split("; ");
                             for (String v : valueList) {
                                 if (!mmo.getValidContent().contains(v)) {
@@ -158,14 +162,22 @@ public class ValidateMetadataFieldsPlugin implements IStepPluginVersion2 {
                         //			            }
                         //			        }
                         //check if field has the demanded wordcount
-                        if (mmo.getWordcount() != 0) {
-                            String[] wordArray = value.split(" ");
+                        if (mmo.getWordcount() != 0 && value != null && !value.trim().isEmpty()) {
+                            String[] wordArray = value.trim().split("\\s+");
                             if (wordArray.length < mmo.getWordcount()) {
                                 valid = false;
                                 issues.add(label_en + ": " + mmo.getWordcountErrormessage());
                             }
                         }
                     }
+                }
+            }
+
+            // check if required fields are completely missing from the metadata
+            for (MetadataMappingObject mmo : metadataList) {
+                if (mmo.isRequired() && !existingMetadataNames.contains(mmo.getRulesetName())) {
+                    valid = false;
+                    issues.add(mmo.getRulesetName() + ": " + mmo.getRequiredErrorMessage());
                 }
             }
 
