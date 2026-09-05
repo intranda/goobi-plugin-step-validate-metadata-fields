@@ -1,6 +1,9 @@
 # Goobi workflow Plugin: goobi-plugin-step-validate-metadata-fields
 
-<img src="https://goobi.io/wp-content/uploads/logo_goobi_plugin.png" align="right" style="margin:0 0 20px 20px;" alt="Plugin for Goobi workflow" width="175" height="109">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://goobi.io/logo_goobi_workflow_dark.png">
+  <img src="https://goobi.io/logo_goobi_workflow.png" align="right" alt="Plugin for Goobi workflow" width="240" height="132" hspace="20" vspace="10">
+</picture>
 
 This Step plugin for Goobi workflow is executing a detailed validation of metadata fields. It is opening the METS file, reads all its metadata fields and compares their values against the expectations that are defined inside of the configuration file. It checks for required fields, for number of words, regular expressions and compares content agains a controlled vocabulary inside of a separate text file.
 
